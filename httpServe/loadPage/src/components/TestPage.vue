@@ -64,7 +64,7 @@ const initThree = () => {
 
   // 添加灯光
   scene.add(new AmbientLight(0x404040, 2));
-  const directionalLight = new DirectionalLight(0xffffff, 1);
+  const directionalLight = new DirectionalLight(0xffffff, 3);
   directionalLight.position.set(100, 100, 100);
   scene.add(directionalLight);
 

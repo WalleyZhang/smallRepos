@@ -122,9 +122,11 @@ export class RobotLoader extends Group {
     mtlLoader.setPath(this.robotPath);
     objLoader.setPath(this.robotPath);
 
-    const mtl = await mtlLoader.loadAsync(`${fileName}.mtl`);
+    // 添加唯一参数，避免缓存
+    const cacheBuster = `?t=${Date.now()}`;
+    const mtl = await mtlLoader.loadAsync(`${fileName}.mtl${cacheBuster}`);
     objLoader.setMaterials(mtl);
-    const obj = await objLoader.loadAsync(`${fileName}.obj`);
+    const obj = await objLoader.loadAsync(`${fileName}.obj${cacheBuster}`);
     obj.position.set(pose[0], pose[1], pose[2]);
     // 基座要沿世界坐标系旋转，运动轴要沿自身坐标系旋转
     obj.rotation.set(pose[3], pose[4], pose[5], jointNumber === 0 ? 'ZYX' : 'XYZ');
