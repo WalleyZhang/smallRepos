@@ -38,28 +38,72 @@ export class RobotLoader extends Group {
     return this._failReason;
   }
 
-  /** 机器人初始化，尝试将机器人模型加载到内存中 */
-  public async load() {
+  /** 清理内存中所有模型和资源 */
+  public clear() {
+    this.traverse(obj => {
+      // 释放几何体
+      if ((obj as any).geometry) {
+        (obj as any).geometry.dispose?.();
+      }
+
+      // 释放材质和纹理
+      if ((obj as any).material) {
+        const materials = Array.isArray((obj as any).material) ? (obj as any).material : [(obj as any).material];
+        materials.forEach(mat => {
+          for (const key in mat) {
+            const value = mat[key];
+            if (value && typeof value.dispose === 'function') {
+              value.dispose();
+            }
+          }
+          mat.dispose?.();
+        });
+      }
+    });
+    // 清空子对象
+    return super.clear(); // Group 自带 clear 方法清空 children
+  }
+
+  /** 机器人初始化，尝试将机器人模型加载到内存中，支持超时 */
+  public async load(timeoutMs: number = 10000) {
     this._status = 'loading';
     this._progressPercentage = 0;
     this._failReason = undefined;
+
     try {
-      this.manifest = await this.loadRobotManifest();
-      const joints = await this.loadJoints(this.manifest.schema, true);
+      // 创建一个带超时的 Promise
+      const loadPromise = (async () => {
+        this.manifest = await this.loadRobotManifest();
+        const joints = await this.loadJoints(this.manifest.schema, true);
 
-      // 模型组装
-      for (let i = 1; i < joints.length; i++) {
-        joints[i - 1].add(joints[i]);
-      }
+        // 模型组装
+        for (let i = 1; i < joints.length; i++) {
+          joints[i - 1].add(joints[i]);
+        }
 
-      this.add(joints[0]);
-      this._status = 'loaded';
+        this.add(joints[0]);
+        this._status = 'loaded';
+      })();
+
+      // 使用 Promise.race 实现超时
+      await Promise.race([
+        loadPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => {
+            this._status = 'failed';
+            this._failReason = `加载超时 ${timeoutMs}ms`;
+            reject(new Error(this._failReason));
+          }, timeoutMs)
+        )
+      ]);
     } catch (error: any) {
       this._status = 'failed';
       this._failReason = error?.message || '加载模型失败';
+
       throw new Error(this._failReason);
     }
   }
+
 
   /** 单独加载关节 */
   public async loadIndividualJoints(jointIndices: number[]) {
@@ -104,10 +148,9 @@ export class RobotLoader extends Group {
 
     let pose: Pose = [0, 0, 0, 0, 0, 0];
     for (let i = 0; i < schemas.length; i++) {
-      const jointIndex = this.manifest.schema.indexOf(schemas[i]);
-      promiseList.push(this.createJointModel(schemas[i], assemble ? pose : [0, 0, 0, 0, 0, 0], jointIndex));
+      promiseList.push(this.createJointModel(schemas[i], assemble ? pose : [0, 0, 0, 0, 0, 0], i));
       if (assemble) {
-        pose = this.manifest.geometry[jointIndex] as Pose;
+        pose = this.manifest.geometry[i] as Pose;
       }
     }
 

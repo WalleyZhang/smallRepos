@@ -179,7 +179,7 @@ const runSingleTest = async () => {
     robotLoader.clear(); 
     // 根据模式加载模型
     if (testMode === 'all') {
-      await robotLoader.load();
+      await robotLoader.load(timeout.value);
     } else {
       await robotLoader.loadIndividualJoints(selectedJoints);
     }
