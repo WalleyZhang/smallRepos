@@ -74,7 +74,7 @@ if "%GO_OS_CHOICE%"=="windows" (
     go build -o "%OUT_DIR%\server\%GO_BINARY_NAME%.exe" "%GO_SOURCE_PATH%"
 ) else (
     set "GOOS=%GO_OS_CHOICE%"
-    set "GOARCH=amd64"
+    set "GOARCH=arm64"
     go build -o "%OUT_DIR%\server\%GO_BINARY_NAME%" "%GO_SOURCE_PATH%"
 )
 

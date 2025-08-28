@@ -165,10 +165,10 @@ const startTest = async () => {
   
   // 汇总结果并生成文档
   testResults.value = {
-    totalTime: endTime - startTime,
+    totalTime: endTime - startTime - (testCount.value - 1) * 100,
     successCount: resultsData.successCount,
     failCount: resultsData.failCount,
-    failedModels: resultsData.failedModels,
+    failedModels: resultsData.failedModels
   };
   generateMarkdownReport();
 };
@@ -214,6 +214,7 @@ const generateMarkdownReport = () => {
   markdown += `测试模式: ${testMode === 'all' ? '整体模型' : '单独模型'}\n`;
   markdown += `测试次数: ${testCount.value}\n`;
   markdown += `总用时: ${totalTime.toFixed(2)}ms\n\n`;
+  markdown += `平均用时: ${(totalTime / testCount.value).toFixed(2)}ms\n`;
 
   markdown += `| 状态 | 成功次数 | 失败次数 | 失败率 |\n`;
   markdown += `| :--- | :--- | :--- | :--- |\n`;
