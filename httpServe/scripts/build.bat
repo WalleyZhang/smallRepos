@@ -27,7 +27,7 @@ echo.
 
 rem 定义路径和文件名
 set "OUT_DIR=..\out"
-set "GO_SOURCE_PATH=..\server\main.go"
+set "GO_SOURCE_PATH=..\server\goServer\main.go"
 set "GO_BINARY_NAME=server_app"
 set "VUE_BUILD_PATH=..\loadPage"
 set "FRONTEND_DIST_PATH=..\loadPage\dist"

@@ -13,6 +13,7 @@
         </div>
         <button @click="navigateToTest('individual')">开始单独测试</button>
       </div>
+      <button @click="navigateToTest('additional')">测试非模型文件</button>
     </div>
   </div>
 </template>
@@ -39,8 +40,10 @@ const navigateToTest = (mode) => {
         joints: selectedJoints.value.join(',') 
       } 
     });
-  } else {
+  } else if (mode === 'all') {
     router.push({ name: 'TestPage', query: { mode: 'all' } });
+  } else if (mode === 'additional') {
+    router.push({ name: 'AdditionalTestPage' });
   }
 };
 </script>

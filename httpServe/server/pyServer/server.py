@@ -7,7 +7,7 @@ import tornado.web
 
 # 静态文件目录
 STATIC_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../loadPage/dist")
+    os.path.join(os.path.dirname(__file__), "loadPage/dist")
 )
 PORT = 10010
 
@@ -37,10 +37,18 @@ class MyStaticFileHandler(tornado.web.StaticFileHandler):
             logger.exception(f"[{e.status_code}] {absolute_path}")
             if e.status_code != 404:
                 raise e from e
-            # 如果访问的是 HTML 文件不存在，重定向到 index.html
-            if os.path.basename(absolute_path).endswith(".html"):
+
+            # 判断是不是静态资源请求
+            _, ext = os.path.splitext(absolute_path)
+            if ext in [".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg"]:
+                raise e  # 静态资源文件不存在，直接返回404
+
+            # 如果访问的是目录（比如 "/"），直接 fallback 到 index.html
+            if os.path.isdir(absolute_path) or absolute_path == root:
                 return os.path.join(root, "index.html")
-            raise e
+
+            # 其它情况（非静态文件，前端路由）也 fallback 到 index.html
+            return os.path.join(root, "index.html")
 
 
 def make_app():
