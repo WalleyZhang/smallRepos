@@ -118,7 +118,7 @@ const testMode = route.query.mode;
 const selectedJoints = testMode === 'individual' ? route.query.joints.split(',').map(Number) : [];
 
 const testCount = ref(10);
-const timeout = ref(10000);
+const timeout = ref(3000);
 const isTesting = ref(false);
 const testResults = ref(null);
 const progress = ref(0);

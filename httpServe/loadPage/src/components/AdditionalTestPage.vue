@@ -37,6 +37,13 @@
           </li>
         </ul>
       </div>
+
+      <!-- 显示下载到的图片 -->
+      <div v-if="imageUrl" class="image-preview">
+        <h4>下载的图片：</h4>
+        <img :src="imageUrl" alt="Test BMP" />
+      </div>
+
       <button @click="exportMarkdown">导出为 Markdown</button>
     </div>
   </div>
@@ -48,13 +55,14 @@ export default {
   data() {
     return {
       testCount: 10,
-      timeout: 1000,
+      timeout: 3000,
       isTesting: false,
       currentTest: 0,
       successTimes: [],
       timeoutFailures: 0,
       otherFailures: [],
       finished: false,
+      imageUrl: null, // 保存最后一次成功下载的图片
     };
   },
   computed: {
@@ -80,15 +88,19 @@ export default {
       this.successTimes = [];
       this.timeoutFailures = 0;
       this.otherFailures = [];
+      this.imageUrl = null;
 
       for (let i = 0; i < this.testCount; i++) {
         this.currentTest = i + 1;
         try {
-          const time = await this.downloadWithTimeout(
-            process.env.BASE_URL + "nvm-setup.exe",
+          const { time, blob } = await this.downloadWithTimeout(
+            "test.bmp",
             this.timeout
           );
           this.successTimes.push(time);
+
+          // 保存最后一次成功的图片
+          this.imageUrl = URL.createObjectURL(blob);
         } catch (err) {
           if (err.message === "timeout") {
             this.timeoutFailures++;
@@ -103,8 +115,7 @@ export default {
     },
 
     downloadWithTimeout(url, timeout) {
-      // 添加唯一参数，避免缓存
-      const cacheBuster = `?t=${Date.now()}`;
+
       return new Promise((resolve, reject) => {
         const controller = new AbortController();
         const signal = controller.signal;
@@ -115,17 +126,17 @@ export default {
           reject(new Error("timeout"));
         }, timeout);
 
-        fetch(url+cacheBuster, { signal })
+        fetch(url, { signal, cache: "no-store" })
           .then((response) => {
             if (!response.ok) {
               throw new Error("HTTP错误：" + response.status);
             }
             return response.blob();
           })
-          .then(() => {
+          .then((blob) => {
             clearTimeout(timeoutId);
             const end = performance.now();
-            resolve(end - start);
+            resolve({ time: end - start, blob });
           })
           .catch((err) => {
             clearTimeout(timeoutId);
@@ -206,6 +217,18 @@ export default {
   margin-top: 30px;
   background: #fafafa;
   padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.image-preview {
+  margin: 20px 0;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 400px;
+  border: 1px solid #ddd;
   border-radius: 5px;
 }
 </style>
